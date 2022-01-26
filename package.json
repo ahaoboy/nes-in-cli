@@ -1,0 +1,63 @@
+{
+  "version": "0.2.2",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsup watch",
+    "dev": "tsup ./src/index.tsx --format=cjs --loader \".nes=base64\" --watch",
+    "build": "tsup ./src/index.tsx --format=cjs --loader \".nes=base64\"",
+    "test": "tsup test",
+    "lint": "tsdx lint",
+    "r": "esno ./dist/index.js",
+    "r2": "esno ./t.jsx",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "e-nes",
+  "author": "阿豪boy",
+  "module": "dist/e-nes.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/e-nes.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/e-nes.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@types/node": "^17.0.12",
+    "tsup": "^5.11.11",
+    "typescript": "^4.5.0"
+  },
+  "dependencies": {
+    "chalk": "^5.0.0",
+    "esno": "^0.14.0",
+    "idb-keyval": "^6.0.2",
+    "ink": "^3.2.0",
+    "libwebp-wasm": "^0.1.2",
+    "react": "^17.0.2",
+    "stb-image-wasm": "^0.1.0",
+    "tslib": "^2.3.1"
+  }
+}
