@@ -10,7 +10,6 @@ import React, { useState, useEffect } from "react";
 import { render, Text, Box, Newline } from "ink";
 import { encodeRGBA } from "libwebp-wasm";
 import readline from "readline";
-
 import chalk from "chalk";
 const setupAudio = (nes: WasmNes) => {
   if (!globalThis.AudioContext) return;
@@ -105,67 +104,27 @@ export const load = async (wasm: InitOutput, id: string) => {
   new Uint8Array(mem.buffer).set(new Uint8Array(buffer));
 };
 
-const NES = ({
-  data,
-  width = 0,
-  height = 0,
-}: {
-  data?: Uint8Array;
-  width: number;
-  height: number;
-}) => {
-  const getColor = (x: number, y: number) => {
-    if (!data) return "white";
-    const i = (y * width + x) * 4;
-    const c = `rgb(${data[i]}, ${data[i + 1]}, ${data[i + 2]})`;
-    return c;
-  };
-
-  const list: any = [];
-  for (let h = 0; h < height; h++) {
-    for (let w = 0; w < width; w++) {
-      list.push(<Text color={getColor(w, h)}>{BLOCK_CHAR}</Text>);
-    }
-    list.push(<Newline />);
-    break;
-  }
-
-  return (
-    <>
-      {Array(width)
-        .fill(0)
-        .map((_, x) => (
-          <Text color={getColor(x, 0)}>{BLOCK_CHAR}</Text>
-        ))}
-    </>
-  );
-};
 export const BLOCK_CHAR = "█";
 export const BLOCK_CHAR2 = "█";
-
-const saveImg = async (data, width, height) => {
-  const buf = await encodeRGBA(data, width, height);
-  fs.writeFileSync("./p.webp", buf);
-};
+const width = 256;
+const height = 240;
+const cx = 2;
+const cy = 4;
+const mw = width / cx;
+const mh = height / cy;
+let handle
 const Counter = () => {
-  const [data, setData] = useState();
-  const [width, setWidth] = useState(256);
-  const [height, setHeight] = useState(240);
-  const cx = 2;
-  const cy = 4;
-  const mw = width / cx;
-  const mh = height / cy;
-
+  const [data, setData] = useState(Array(mw * mh * 4).fill(0));
   useEffect(() => {
     async function main() {
       let st = +new Date();
       const rom = new Uint8Array(Buffer.from(island_3_base64, "base64"));
-      console.log("rom");
       const render = async (data: Uint8Array) => {
         const end = +new Date();
-        if (end - st < 1000) {
+        if (end - st < 100) {
           return;
         }
+        handle?.clear?.();
         st = +new Date();
         const miniData = new Uint8Array(mw * mh * 4);
         for (let j = 0; j < mh; j += 1) {
@@ -186,18 +145,26 @@ const Counter = () => {
         // saveImg(miniData, mw, mh);
         setData(miniData);
       };
-      const { width, height } = await createNes({ rom, render });
+      await createNes({ rom, render });
+      // const { width, height } = await createNes({ rom, render });
       // console.log(width, height);
-      setWidth(width);
-      setHeight(height);
+      // setWidth(width);
+      // setHeight(height);
     }
     main();
   }, []);
-  const getColor = (x: number, y: number) => {
-    if (!data) return "white";
-    const i = (y * mw + x) * 4;
-    const c = `rgb(${data[i]}, ${data[i + 1]}, ${data[i + 2]})`;
-    return c;
+  const getLine = (h: number) => {
+    const i = h * mw * 4;
+    return Array(mw)
+      .fill(0)
+      .map((_, x) =>
+        chalk.rgb(
+          data[i + x * 4],
+          data[i + x * 4 + 1],
+          data[i + x * 4 + 2]
+        )(BLOCK_CHAR)
+      )
+      .join("");
   };
   // return <Text>1</Text>;
   return (
@@ -205,36 +172,13 @@ const Counter = () => {
       {Array(mh)
         .fill(0)
         .map((_, y) => (
-          <Box key={y} width={mw}>
-            {Array(mw)
-              .fill(0)
-              .map((_, x) => (
-                <Text key={y * mw + x} color={getColor(x, y)}>
-                  {BLOCK_CHAR}
-                </Text>
-              ))}
-          </Box>
-        ))}
-    </>
-  );
-
-  return (
-    <>
-      {Array(height / 4)
-        .fill(0)
-        .map((_, y) => (
-          <Box key={y} width={width / 4}>
-            {Array(width / 4)
-              .fill(0)
-              .map((_, x) => (
-                <Text key={y * width + x} color={getColor(x, y)}>
-                  {BLOCK_CHAR}
-                </Text>
-              ))}
+          <Box key={y} width={width}>
+            <Text>{getLine(y)}</Text>
+            {/* {getLine(y)} */}
           </Box>
         ))}
     </>
   );
 };
 
-render(<Counter />);
+ handle = render(<Counter />);
